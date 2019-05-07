@@ -1,0 +1,179 @@
+---
+- hosts:
+    - proxmox
+  tasks:
+  - name: Download pfSense iso
+    get_url:
+      url: https://atxfiles.pfsense.org/mirror/downloads/pfSense-CE-2.4.4-RELEASE-p1-amd64.iso.gz
+      dest: /var/lib/vz/template/iso/
+      mode: 0440
+  - name: Unzip pfSense iso
+    shell: gunzip -f pfSense-CE-2.4.4-RELEASE-p1-amd64.iso.gz
+    args:
+      chdir: /var/lib/vz/template/iso/
+  - name: Download kali iso
+    get_url:
+      url: https://cdimage.kali.org/kali-2019.1a/kali-linux-mate-2019.1a-amd64.iso
+      dest: /var/lib/vz/template/iso/
+      mode: 0440
+  - name: Create KVM virtual machines
+    shell: |
+      qm create {{ item.num }} -name {{ item.name }} --cores 2 --memory 2048 -ide0 local-lvm:4 -net0 virtio,bridge=vmbr0 -cdrom local:iso/{{ item.iso }}
+      qm start {{ item.num }}
+    with_items:
+      - { name: 'pfsense0', num: 200, iso: 'pfSense-CE-2.4.4-RELEASE-p1-amd64.iso' }
+      - { name: 'kali', num: 210, iso: 'kali-linux-mate-2019.1a-amd64.iso' }
+  - name: Clone pfsense0 200 205 -name pfsense1
+    shell: qm 
+  - name: Copy ansible ssh key to host
+    shell: pct pull 210 /home/ansible/.ssh/id_rsa.pub authorized_keys
+  - name: Make LXC virtual machines
+    shell: |
+      pct clone 1000 {{ item.num }} --hostname {{ item.name }} --storage=local-lvm --full
+      pct set {{ item.num }} -net0 name=eth0,bridge=vmbr0,ip=192.168.0.{{ item.num }}/24,gw=192.168.0.1
+      pct start {{ item.num }}
+      pct exec {{ item.num }} -- bash -c "useradd {{ item.name }} -s /bin/bash -m -g sudo -G sudo"
+      pct exec {{ item.num }} -- bash -c "echo {{ item.name }}:csusm | chpasswd"
+      pct exec {{ item.num }} -- bash -c "mkdir /home/{{ item.name }}/.ssh"
+      pct exec {{ item.num }} -- bash -c "apt install python -y"
+      pct push {{ item.num }} authorized_keys /home/{{ item.name }}/.ssh/authorized_keys
+    with_items:
+      - { name: 'apache', num: 100 }
+      - { name: 'nginx', num: 105 }
+      - { name: 'node', num: 110 }
+      - { name: 'mysql', num: 115 }
+      - { name: 'mongodb', num: 120 }
+      - { name: 'jenkins', num: 125 }
+      - { name: 'git', num: 130 }
+      - { name: 'dev1', num: 135 }
+      - { name: 'dev2', num: 140 }
+      
+
+# - hosts:
+#     - apache
+#   become: yes
+#   become_user: root
+#   tasks:
+#     - name: install apache2
+#       apt: 
+#         name: apache2
+#         state: present
+#         update_cache: true
+#   handlers:
+#     - name: restart apache2
+#       service:
+#         name: apache2
+#         state: restarted
+
+# - hosts:
+#     - nginx
+#   become: yes
+#   become_user: root
+#   tasks:
+#     - name: install nginx
+#       apt: 
+#         name: nginx
+#         state: present
+#         update_cache: true
+#   handlers:
+#     - name: restart nginx
+#       service:
+#         name: nginx
+#         state: restarted
+
+
+# - hosts:
+#     - node
+#   become: yes
+#   become_user: root
+#   tasks:
+#     - name: install nodejs and npm
+#       apt:
+#         name: nodejs
+#         state: present
+#         update_cache: true
+#       apt:
+#         name: npm
+#         state: present
+#         update_cache: true
+#   handlers:
+#     - name: restart nodejs and npm
+#       service:
+#         name:
+#           nodejs
+#           npm
+#         state: restarted
+
+# - hosts:
+#     - mysql
+#   become: yes
+#   become_user: root
+#   tasks:
+#     - name: install mysql
+#       apt: name={{ item }} state=present update_cache=true
+#       with_items:
+#         - mysql-server-5.7
+#         - mysql-client-5.7
+#         - python-mysqldb
+#         - libmysqlclient-dev
+#   handlers:
+#     - name: restart mysql
+#       service:
+#         name: mysql
+#         state: restarted
+
+# - hosts:
+#     - jenkins
+#   become: yes
+#   become_user: root
+#   tasks:
+#     - name: Install ppa for jenkins
+#       shell: |
+#         wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+#         sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+#         sudo apt update
+#     - name: install jenkins
+#       apt: name={{ item }} state=present update_cache=true
+#       with_items:
+#         - openjdk-8-jdk
+#         - jenkins
+#   handlers:
+#     - name: restart jenkins
+#       service:
+#         name: jenkins
+#         state:
+#           stop
+#           start
+
+# - hosts:
+#     - git
+#   become: yes
+#   become_user: root
+#   tasks:
+#     - name: install git
+#       apt: name={{ item }} state=present update_cache=true
+#       with_items:
+#         - git
+#         - curl
+#         - openssh-server
+#         - ca-certificates
+#         - postfix
+#     - name: pull gitlab repository
+#       shell: curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
+#     - name: install gitlab
+#       apt: name=gitlab-ce state=present update_cache=true
+
+- hosts:
+    - proxmox
+  tasks:
+    - name: Stop the virtual machines
+      shell: pct stop {{ item }}
+      with_items:
+        - 100
+        - 105
+        - 110
+        - 115
+        - 120
+        - 125
+        - 130
+        - 135

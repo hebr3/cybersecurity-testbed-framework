@@ -1,0 +1,12 @@
+---
+- hosts:
+    - proxmox
+  tasks:
+  - name: Set lab01 network configuration
+    shell: |
+      pct set {{ item.num }} -net0 name=eth0,bridge=vmbr0,ip=192.168.0.{{ item.num }}/24,gw=192.168.1.1
+      pct stop {{ item.num }}
+    with_items:
+      - { name: 'apache', num: 100}
+      - { name: 'mysql', num: 115}
+      - { name: 'dev', num: 135}

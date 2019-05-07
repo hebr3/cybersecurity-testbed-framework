@@ -1,0 +1,32 @@
+[proxmox]
+192.168.0.90 ansible_ssh_user=root ansible_sudo_pass=csusm
+
+[pfsense]
+192.168.0.200 ansible_ssh_user=root ansible_sudo_pass=csusm
+
+[kali]
+192.168.0.205 ansible_ssh_user=root ansible_sudo_pass=csusm
+
+[apache]
+192.168.0.100 ansible_ssh_user=apache ansible_sudo_pass=csusm
+
+[nginx]
+192.168.0.105 ansible_ssh_user=nginx ansible_sudo_pass=csusm
+
+[node]
+192.168.0.110 ansible_ssh_user=node ansible_sudo_pass=csusm
+
+[mysql]
+192.168.0.115 ansible_ssh_user=mysql ansible_sudo_pass=csusm
+
+[mongodb]
+192.168.0.120 ansible_ssh_user=mongodb ansible_sudo_pass=csusm
+
+[jenkins]
+192.168.0.125 ansible_ssh_user=jenkins ansible_sudo_pass=csusm
+
+[git]
+192.168.0.130 ansible_ssh_user=git ansible_sudo_pass=csusm
+
+[dev]
+192.168.0.135 ansible_ssh_user=dev ansible_sudo_pass=csusm

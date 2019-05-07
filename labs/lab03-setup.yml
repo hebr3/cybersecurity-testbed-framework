@@ -1,0 +1,22 @@
+---
+- hosts:
+    - proxmox
+  tasks:
+  - name: Set lab03 DMZ network configuration
+    shell: |    
+      pct start {{ item.num }}
+      pct set {{ item.num }} -net0 name=eth0,bridge=vmbr0,ip=192.168.1.{{ item.num }}/24,gw=192.168.1.1
+    with_items:
+      - { name: 'nginx', num: 100 }
+      - { name: 'mongodb', num: 105 }
+  - name: Start pfSense1
+    shell: qm start 201
+  - name: Set lab03 Internal network configuration
+    shell: |
+      pct start {{ item.num }}
+      pct set {{ item.num }} -net0 name=eth0,bridge=vmbr0,ip=192.168.2.{{ item.num }}/24,gw=192.168.1.1
+    with_items:
+      - { name: 'jenkins', num: 110 }
+      - { name: 'git', num: 115 }
+      - { name: 'dev1', num: 120 }
+      - { name: 'dev2', num: 125 }

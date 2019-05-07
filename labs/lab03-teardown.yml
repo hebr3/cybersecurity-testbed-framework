@@ -1,0 +1,17 @@
+---
+- hosts:
+    - proxmox
+  tasks:
+  - name: Stop pfSense1
+    shell: qm stop 201
+  - name: Set lab01 network configuration
+    shell: |
+      pct start {{ item.num }}
+      pct set {{ item.num }} -net0 name=eth0,bridge=vmbr0,ip=192.168.1.{{ item.num }}/24,gw=192.168.1.1
+    with_items:
+      - { name: 'nginx', num: 105 }
+      - { name: 'mongodb', num: 120 }
+      - { name: 'jenkins', num: 125 }
+      - { name: 'git', num: 130 }
+      - { name: 'dev1', num: 135 }
+      - { name: 'dev2', num: 140 }
